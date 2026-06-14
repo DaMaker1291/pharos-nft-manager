@@ -1,0 +1,16 @@
+{
+  "description": "NFT description here",
+  "image": "ipfs://QmPlaceholderImageHash",
+  "name": "Token #1",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Color",
+      "value": "Blue"
+    }
+  ],
+  "external_url": "https://pharos.network/nft/1"
+}

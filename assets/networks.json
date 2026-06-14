@@ -1,0 +1,22 @@
+{
+  "atlantic-testnet": {
+    "name": "Pharos Atlantic Testnet",
+    "chainId": 688689,
+    "rpcUrl": "https://atlantic.dplabs-internal.com",
+    "explorerUrl": "https://atlantic.pacific-explorer.pharos.network",
+    "explorerApiUrl": "https://atlantic.pacific-explorer.pharos.network",
+    "nativeToken": "PHRS",
+    "nativeTokenDecimals": 18,
+    "currency": "PHRS"
+  },
+  "pacific-mainnet": {
+    "name": "Pharos Pacific Mainnet",
+    "chainId": 688688,
+    "rpcUrl": "https://pacific.dplabs-internal.com",
+    "explorerUrl": "https://pacific.pacific-explorer.pharos.network",
+    "explorerApiUrl": "https://pacific.pacific-explorer.pharos.network",
+    "nativeToken": "PHRS",
+    "nativeTokenDecimals": 18,
+    "currency": "PHRS"
+  }
+}
