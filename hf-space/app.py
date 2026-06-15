@@ -620,4 +620,4 @@ with gr.Blocks(theme=gr.themes.Soft(primary_hue="purple", secondary_hue="cyan"),
     gr.Markdown("---\n*Powered by Pillow + ffmpeg on Hugging Face Spaces — free CPU tier*")
 
 if __name__ == "__main__":
-    demo.launch(ssr=False)
+    demo.launch()
