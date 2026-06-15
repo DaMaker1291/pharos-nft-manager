@@ -159,11 +159,11 @@ def draw_code_win(draw, x, y, w, h, title, lines, t=1.0, hl=-1):
     for i, line in enumerate(lines[:visible]):
         ly = sy + i * lh
         if line.startswith("#"):
-            draw.text((x+22, ly), line, font=font(13), fill=C["dim"])
+            draw.text((x+22, ly), line, font=font(13), fill="#AAAAAA")
         elif i == hl:
             draw.text((x+22, ly), line, font=font(13), fill=C["accent"])
         else:
-            draw.text((x+22, ly), line, font=font(13), fill=C["text"])
+            draw.text((x+22, ly), line, font=font(13), fill="#FFFFFF")
 
 def draw_term_win(draw, x, y, w, h, title, lines, t=1.0):
     rounded_rect(draw, x, y, w, h, 10, "#080810", "#1A1A3A", 1)
@@ -177,8 +177,10 @@ def draw_term_win(draw, x, y, w, h, title, lines, t=1.0):
             draw.text((x+14, ly), line, font=font(12), fill=C["accent"])
         elif line.startswith("✓"):
             draw.text((x+14, ly), line, font=font(12), fill="#00FF88")
+        elif line.startswith("       "):
+            draw.text((x+14, ly), line, font=font(12), fill="#00FF88")
         else:
-            draw.text((x+14, ly), line, font=font(12), fill=C["text"])
+            draw.text((x+14, ly), line, font=font(12), fill="#FFFFFF")
 
 # ─── SCENES ───
 
@@ -273,7 +275,7 @@ def scene_problem(draw, f, t, total, particles):
         draw.text((xc+cw//2, yc+75), title, font=font(20, True), fill=(255, 255, 255, ca), anchor="mm")
         draw.text((xc+cw//2, yc+105), sub, font=font(14), fill=(*hex_rgb(C["secondary"]), ca), anchor="mm")
         draw.line([xc+60, yc+128, xc+cw-60, yc+128], fill=(60, 60, 120, ca), width=1)
-        draw.text((xc+cw//2, yc+145), desc, font=font(15), fill=(180, 180, 220, ca), anchor="mm", align="center")
+        draw.multiline_text((xc+20, yc+135), desc, font=font(15), fill=(220, 220, 255, ca), spacing=4)
 
 
 def scene_solution(draw, f, t, total, particles):
@@ -321,9 +323,9 @@ def scene_solution(draw, f, t, total, particles):
             # Glow line left
             draw.rectangle([px+3, 590, px+5, 660], fill=(*hex_rgb(C["primary"]), pa))
 
-            draw.text((px+24, 600), icon, font=font(26))
-            draw.text((px+65, 596), title, font=font(17, True), fill=(255, 255, 255, pa))
-            draw.text((px+65, 622), desc, font=font(13), fill=(180, 180, 220, pa))
+            draw.text((px+20, 596), icon, font=font(26))
+            draw.text((px+65, 594), title, font=font(17, True), fill=(255, 255, 255, pa))
+            draw.text((px+65, 622), desc, font=font(13), fill=(220, 220, 255, pa))
 
 
 def scene_features(draw, f, t, total, particles):
@@ -371,7 +373,7 @@ def scene_features(draw, f, t, total, particles):
 
         draw.text((fx + 22, entry_y + 18), icon, font=font(30))
         draw.text((fx + 75, entry_y + 20), title, font=font(18, True), fill=(255, 255, 255, ca))
-        draw.text((fx + 75, entry_y + 52), desc, font=font(14), fill=(180, 180, 220, ca))
+        draw.text((fx + 75, entry_y + 52), desc, font=font(14), fill=(220, 220, 255, ca))
 
         # Animated line
         lx = fx + 22 + (f * 2 + i * 50) % (fw - 44)
@@ -443,7 +445,7 @@ def scene_tech(draw, f, t, total, particles):
 
         bx, by, bw, bh = cx-400, 560, 800, 44
         rounded_rect(draw, bx, by, bw, bh, 22, C["card"], (*hex_rgb(C["card_border"]), ba), 1)
-        draw.text((cx, by+22), f"⚡  {ts}", font=font(14), fill=(200, 200, 255, ba), anchor="mm")
+        draw.text((cx, by+22), f"⚡  {ts}", font=font(14), fill=(255, 255, 255, ba), anchor="mm")
 
 
 def scene_why_win(draw, f, t, total, particles):
@@ -478,8 +480,8 @@ def scene_why_win(draw, f, t, total, particles):
         rounded_rect(draw, rx, ry, rw, rh, 10, C["card"], (*hex_rgb(C["card_border"]), ca), 1)
         draw.text((rx+16, ry+20), icon, font=font(26))
         draw.rectangle([rx+3, ry+8, rx+5, ry+rh-8], fill=(*hex_rgb(C["primary"]), ca))
-        draw.text((rx+60, ry+16), title, font=font(18, True), fill=(255, 255, 255, ca))
-        draw.text((rx+60, ry+42), desc, font=font(14), fill=(180, 180, 220, ca), anchor="mm")
+        draw.text((rx+60, ry+14), title, font=font(18, True), fill=(255, 255, 255, ca))
+        draw.text((rx+75, ry+42), desc, font=font(14), fill=(220, 220, 255, ca))
 
 
 def scene_cta(draw, f, t, total, particles):
@@ -618,4 +620,4 @@ with gr.Blocks(theme=gr.themes.Soft(primary_hue="purple", secondary_hue="cyan"),
     gr.Markdown("---\n*Powered by Pillow + ffmpeg on Hugging Face Spaces — free CPU tier*")
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(ssr=False)
