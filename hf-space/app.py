@@ -38,6 +38,7 @@ def hex_rgb(h):
 # ─── FONTS ───
 FONT_CACHE = {}
 def font(size, bold=False):
+    size = max(1, size)
     key = (size, bold)
     if key in FONT_CACHE:
         return FONT_CACHE[key]
