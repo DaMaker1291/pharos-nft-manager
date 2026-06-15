@@ -2,7 +2,7 @@
 title: Pharos NFT — Ad Generator
 emoji: 🎬
 colorFrom: indigo
-colorTo: cyan
+colorTo: blue
 sdk: gradio
 sdk_version: 5.23.3
 app_file: app.py
