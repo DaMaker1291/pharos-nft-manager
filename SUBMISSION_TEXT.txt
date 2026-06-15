@@ -1,0 +1,53 @@
+# Paste this into your DoraHacks submission:
+
+---
+
+## Project Name
+Pharos NFT Collection Manager
+
+## Tagline
+An AI Agent Skill for deploying and managing ERC-721 NFT collections on Pharos Network. Enables agents to create, mint, transfer, and query NFTs through natural language.
+
+## Description (long)
+
+The Pharos NFT Collection Manager is a complete Pharos Skill that enables AI agents (Claude Code, Codex CLI, etc.) to perform the full lifecycle of NFT collection management on the Pharos Network — all through natural language commands.
+
+### What it does
+
+The skill includes a PharosNFT.sol contract (ERC-721 with EIP-2981 royalty support, batch minting, payable minting, and supply caps) and 5 reference files that teach AI agents exactly how to:
+
+- **Deploy** a full NFT collection with configurable name, symbol, max supply, mint price, and royalty percentage
+- **Mint** tokens individually or in batches to multiple addresses
+- **Transfer** NFTs with ownership verification and approval checks
+- **Query** collection stats, token ownership, metadata URIs, and event history
+- **Manage** royalties, update metadata, and perform batch airdrops
+
+### Why this wins
+
+1. **ORIGINAL** — No existing Pharos Skill covers NFT collection management end-to-end
+2. **COMPLETE** — Full lifecycle: deploy → mint → transfer → query → batch
+3. **COMPOSABLE** — Imports cleanly via `npx skills add` and works with the Pharos Skill Engine
+4. **PRACTICAL** — NFTs are essential for membership, credentials, receipts, and rewards in the AI Agent economy
+5. **EXCELLENT DOCS** — Every command template includes parameters table, output parsing, error handling, and agent guidelines
+6. **AI-NATIVE** — Designed from the ground up for AI agent consumption with clear reference files
+
+### Project Structure
+
+- `SKILL.md` — Entry point with YAML frontmatter and 15-entry capability index
+- `assets/nft/PharosNFT.sol` — ERC-721 + EIP-2981 royalty + batch mint (OpenZeppelin based)
+- `assets/networks.json` — Atlantic Testnet + Pacific Mainnet config
+- `assets/metadata/template.json` — NFT metadata attribute template
+- `references/deploy-nft.md` — Full deployment guide with forge script
+- `references/mint-nft.md` — Single and batch mint instructions
+- `references/transfer-nft.md` — Transfer, approve, and burn operations
+- `references/query-nft.md` — Collection and token state queries
+- `references/batch-nft.md` — Batch mint, transfer, and airdrop patterns
+
+### Tags
+Blockchain, AI, Web3, NFT, Agent, Onchain, AgentSkill, MCP
+
+### GitHub Link
+https://github.com/DaMaker1291/pharos-nft-manager
+
+### Demo Video
+[Upload pharos-nft-demo.mp4 from the project folder]
