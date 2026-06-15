@@ -1,0 +1,114 @@
+================================================================================
+HIGGSFIELD AI AD — PHAROS NFT COLLECTION MANAGER
+"Skill-to-Agent Dual Cascade Hackathon" submission promo
+================================================================================
+
+=== GLOBAL STYLE ===
+Dark sci-fi UI aesthetic, deep purple (#6C5CE7) and cyan (#00D2FF) neon accents,
+holographic glassmorphism cards, futuristic terminal windows with green-on-black code.
+Motion-graphics style with smooth camera pans, no live actors, cinematic 16:9.
+Pulsing grid line background. Music: Synthwave / cyberpunk.
+
+=== SCENE 1 — INTRO (0:00–0:12, ~8 seconds) ===
+Establishing shot. Dark navy space with animated hexagonal grid lines glowing faintly.
+Camera slowly zooms in on center.
+A neon cyan hexagon wireframe appears, spinning slowly.
+Text types on letter by letter in center:
+"PHAROS NFT" (large, white, bold, glitch effect on entrance)
+"COLLECTION MANAGER" (below, purple, lighter weight)
+Subtitle fades in: "AI-Powered ERC-721 NFT Management" (cyan, smaller)
+Pulse ring effect radiates from text.
+Bottom left corner text: "Skill-to-Agent Dual Cascade Hackathon"
+Fade to black.
+
+=== SCENE 2 — THE PROBLEM (0:12–0:27, ~15 seconds) ===
+Camera push-in through hexagonal grid.
+Three glass cards slide in from left sequentially with blur-in effect:
+Card 1 (red accent): emoji "😕" | "No NFT Skill on Pharos" | "Developers must build from scratch every time"
+Card 2 (yellow accent): emoji "😤" | "Manual Deployments" | "Every collection needs manual contract deploys"
+Card 3 (orange accent): emoji "😰" | "Zero Composability" | "No reusable modules for agent ecosystems"
+Top text: "THE PROBLEM" (small, cyan) / "No Existing NFT Infrastructure for AI Agents" (white, large)
+Subtle data streams flow behind cards.
+
+=== SCENE 3 — THE SOLUTION (0:27–0:45, ~18 seconds) ===
+Split screen: Left 60% shows a terminal window, right 40% shows a glowing NFT card.
+Terminal window: Black background, green text typing in real-time:
+  user> "Deploy 'Pharos Punks' with symbol PPUNK, max supply 10000, free mint, 2.5% royalty"
+  agent> $ forge script DeployNFT.s.sol --broadcast
+  ✓ Contract deployed at 0x7F...3E2B
+  ✓ Name: Pharos Punks
+  ✓ Symbol: PPUNK
+  ✓ Max Supply: 10,000
+  ✓ Royalty: 2.5%
+Right panel: Animated NFT card flips in, showing pixel art punk avatar with matrix code rain.
+Three benefit pills slide up from bottom:
+  "⚡ Zero Code Deploy — Natural language → smart contract"
+  "🔄 Full Lifecycle — Deploy → Mint → Transfer → Query"
+  "💰 EIP-2981 Royalty — Automated creator fees"
+Text top: "THE SOLUTION — Pharos NFT Collection Manager" (accent green)
+
+=== SCENE 4 — FEATURES (0:45–1:05, ~20 seconds) ===
+Six feature cards animate in a 3×2 grid, staggered by row, with 3D card-flip rotation:
+  📦 Deploy Collection — ERC-721 with EIP-2981, mint price, supply cap
+  🎨 Mint Tokens — Single or batch mint with metadata URIs
+  🔄 Transfer & Approve — Safe transfer with ownership verification
+  🔍 Query State — Owner, URI, balance, total supply, events
+  📋 Batch Operations — Airdrop to 100+ addresses in one transaction
+  💰 Royalty Management — Configurable EIP-2981 creator fees on sales
+Each card has a glowing progress bar at bottom that animates to 100%.
+Top text: "WHAT YOU CAN BUILD — Every Feature an AI Agent Needs for NFTs"
+Bottom banner slide in: "✨ 15 capabilities · 5 reference files · Full error handling"
+
+=== SCENE 5 — TECH STACK (1:05–1:25, ~20 seconds) ===
+Side-by-side comparison view, camera slowly zooming in.
+Left panel (bigger): Solidity smart contract code with syntax highlighting:
+  contract PharosNFT is ERC721URIStorage, ERC721Enumerable, Ownable, IERC2981 {
+      function safeMint(address to, string uri) public payable returns (uint256) {
+          require(msg.value >= mintPrice);
+          require(_nextTokenId <= maxSupply);
+          uint256 tokenId = _nextTokenId++;
+          _safeMint(to, tokenId);
+          _setTokenURI(tokenId, uri);
+          return tokenId;
+      }
+  }
+Right panel: Terminal with Forge deployment commands and agent reference docs.
+Tech stack badges scroll across bottom: Solidity • EIP-2981 • ERC-721 • Foundry • Cast/Forge • AI Agents • OpenZeppelin
+Top text: "BUILT FOR DEVELOPERS — Enterprise-Grade Tech Stack" (gold accent)
+
+=== SCENE 6 — WHY THIS WINS (1:25–1:50, ~25 seconds) ===
+Six award-trophy cards arranged in 2 columns × 3 rows.
+Each has a gold trophy icon, bold title, and description line.
+Animation: Cards fly in from edges and snap into grid.
+🏆 ORIGINAL — "No existing NFT Skill on Pharos" (purple glow)
+🏆 COMPLETE — "Full lifecycle: deploy → mint → transfer → query" (cyan glow)
+🏆 COMPOSABLE — "Importable by any Pharos Skill Engine agent" (green glow)
+🏆 PRACTICAL — "NFTs for membership, credentials, rewards" (gold glow)
+🏆 EXCELLENT DOCS — "Error tables, agent guidelines in every file" (purple glow)
+🏆 AI-NATIVE — "Designed for AI agent consumption from day one" (cyan glow)
+Left accent bar pulses on each card.
+Top text: "WHY THIS WINS — The Judges Will Notice" (gold)
+
+=== SCENE 7 — CALL TO ACTION (1:50–2:00, ~10 seconds) ===
+Camera pulls back to wide shot.
+Center: Large "READY TO WIN?" in bold white text with purple glow, pulsing.
+Below: "Deploy your NFT Collection in Minutes" (cyan, smaller)
+Pill-shaped gradient button (purple to cyan) pulses with glow underneath:
+  "→ github.com/DaMaker1291/pharos-nft-manager"
+Below button, a glass card shows:
+  "Skill-to-Agent Dual Cascade Hackathon"
+  "Phase 1: Skill Hackathon | Deadline: June 17"
+Orbiting decorative particles circle the CTA.
+Final frame: Logo lockup "PHAROS NFT" solid, all text visible, hold 3 seconds.
+End card: Dark with "PHAROS NFT COLLECTION MANAGER" centered, subtitle "AI-Powered ERC-721 NFT Management", bottom "Skill-to-Agent Dual Cascade Hackathon — Phase 1".
+
+=== TRANSITIONS ===
+All scenes: 1-second crossfade between scenes. Background grid is persistent across all scenes. Ambient particle effects throughout. Screen shake / glitch transitions for scene 1→2 and scene 6→7.
+
+=== TECHNICAL SPECS ===
+Resolution: 1920×1080 (16:9)
+Duration: ~120 seconds (2 minutes)
+Frame rate: 30fps
+Style: Motion graphics / kinetic typography / cyberpunk UI
+Audio: Synthwave electronic with bass drops at scene transitions, subtle typing sound effects in terminal scenes.
+================================================================================
