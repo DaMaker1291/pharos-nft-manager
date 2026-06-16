@@ -1,6 +1,6 @@
 import gradio as gr
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-import math, os, subprocess, shutil, json, requests
+import math, os, subprocess, shutil, json, requests, asyncio
 from math import floor
 
 W, H = 1920, 1080
@@ -600,13 +600,222 @@ GEN_MAP = {
     "Web App Tour (10s)": TOUR_SCENES,
 }
 
+REAL_TYPES = ["Real App Demo (20s)", "Real Code Walkthrough (15s)"]
+
 def generate_video(video_type, progress=gr.Progress()):
+    if video_type in REAL_TYPES:
+        return generate_real_demo(video_type, progress)
     progress(0, desc="Initializing...")
     scenes = GEN_MAP[video_type]
     total_frames = sum(f for _,_,f in scenes) if scenes else 1
     particles = [Particle(i*137) for i in range(120)]
     render_video(scenes, video_type, progress, total_frames, particles)
     return stitch_video(OUTPUT_VID, progress)
+
+# ═══════════════════════════════════════════
+#  PLAYWRIGHT REAL-SCREENSHOT GENERATORS
+# ═══════════════════════════════════════════
+
+WEBAPP_URL = "https://damaker1291.github.io/pharos-nft-manager"
+RAW_URL = "https://raw.githubusercontent.com/DaMaker1291/pharos-nft-manager/main"
+
+def ensure_playwright():
+    """Install chromium if not already installed"""
+    cache_dir = os.path.expanduser("~/.cache/ms-playwright")
+    if not os.path.exists(cache_dir) or not os.listdir(cache_dir):
+        subprocess.run(["python3", "-m", "playwright", "install", "chromium"], check=False, capture_output=True)
+
+async def capture_screenshots():
+    """Take real screenshots of the web app pages"""
+    ensure_playwright()
+    from playwright.async_api import async_playwright
+    screenshots = []
+    pages = [
+        ("", "Dashboard"),
+        ("deploy", "Deploy Collection"),
+        ("mint", "Mint Tokens"),
+        ("transfer", "Transfer & Approve"),
+        ("query", "Query Collection"),
+        ("batch", "Batch Operations"),
+        ("royalty", "Royalty Management"),
+    ]
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+        context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+        page = await context.new_page()
+        for route, label in pages:
+            url = f"{WEBAPP_URL}/{route}" if route else WEBAPP_URL
+            try:
+                await page.goto(url, timeout=30000, wait_until="networkidle")
+                await page.wait_for_timeout(2000)
+                path = f"{FRAMES}/app_{route or 'dashboard'}.png"
+                await page.screenshot(path=path, full_page=True)
+                screenshots.append((path, label))
+            except Exception as e:
+                print(f"  ⚠ Screenshot failed for {url}: {e}")
+        await browser.close()
+    return screenshots
+
+def render_code_image(code, language, title):
+    """Render code with syntax highlighting using Pygments"""
+    from pygments import highlight
+    from pygments.lexers import get_lexer_by_name, guess_lexer
+    from pygments.formatters import img
+    try:
+        lexer = get_lexer_by_name(language, stripall=True)
+    except:
+        lexer = guess_lexer(code)
+    formatter = img.ImageFormatter(
+        style="monokai",
+        line_numbers=True,
+        font_size=20,
+        image_pad=20,
+        line_pad=6,
+    )
+    out_path = f"{FRAMES}/code_{title.replace(' ', '_')}.png"
+    with open(out_path, "wb") as f:
+        highlight(code, lexer, formatter, f)
+    # Overlay title on the code image
+    img = Image.open(out_path).convert("RGBA")
+    draw = ImageDraw.Draw(img)
+    draw.text((img.width // 2, 20), title, font=font(24, True), fill=(255, 255, 255), anchor="mt")
+    img.save(out_path)
+    return out_path
+
+async def capture_code_screenshots():
+    """Fetch and render code from GitHub"""
+    ensure_playwright()
+    files = [
+        ("assets/nft/PharosNFT.sol", "solidity", "PharosNFT.sol - Smart Contract"),
+        ("SKILL.md", "markdown", "SKILL.md - Entry Point"),
+        ("references/deploy-nft.md", "markdown", "deploy-nft.md - Deployment Guide"),
+    ]
+    screenshots = []
+    for path, lang, title in files:
+        url = f"{RAW_URL}/{path}"
+        try:
+            resp = requests.get(url, timeout=15)
+            if resp.status_code == 200:
+                img_path = render_code_image(resp.text, lang, title)
+                screenshots.append((img_path, title))
+        except Exception as e:
+            print(f"  ⚠ Code fetch failed for {url}: {e}")
+    return screenshots
+
+def create_title_frame(text, subtitle, output_path):
+    """Create a professional title frame using Pillow"""
+    img = Image.new("RGBA", (W, H), (10, 0, 21))
+    draw = ImageDraw.Draw(img)
+    for y in range(H):
+        t = y / H
+        c1, c2 = hex_rgb(C["bg1"]), hex_rgb(C["bg3"])
+        r = int(lerp(c1[0], c2[0], t))
+        g = int(lerp(c1[1], c2[1], t))
+        b = int(lerp(c1[2], c2[2], t))
+        draw.line([(0, y), (W, y)], fill=(r, g, b))
+    glow(draw, W // 2, H // 2 - 50, 250, C["primary"], 12)
+    draw.text((W // 2, H // 2 - 60), text, font=font(52, True), fill=(255, 255, 255), anchor="mm")
+    if subtitle:
+        draw.text((W // 2, H // 2 + 20), subtitle, font=font(22), fill=(*hex_rgb(C["secondary"]), 255), anchor="mm")
+    draw.text((W // 2, H - 40), "Pharos NFT Collection Manager  |  github.com/DaMaker1291/pharos-nft-manager",
+              font=font(12), fill=(100, 100, 170, 180), anchor="mm")
+    img.save(output_path)
+
+def ken_burns_clip(input_path, output_path, duration=3.0, zoom_in=True):
+    """Create a Ken Burns zoom effect clip from a static image"""
+    fps = FPS
+    frames = int(duration * fps)
+    start_z = 1.0
+    end_z = 1.15 if zoom_in else 1.0
+    step = (end_z - start_z) / frames
+    for i in range(frames):
+        z = start_z + step * i
+        img = Image.open(input_path).convert("RGBA")
+        iw, ih = img.size
+        # Scale the image
+        new_w = int(iw * z)
+        new_h = int(ih * z)
+        img = img.resize((new_w, new_h), Image.LANCZOS)
+        # Center crop to 1920x1080
+        x = (new_w - W) // 2
+        y = (new_h - H) // 2
+        img = img.crop((x, y, x + W, y + H))
+        img.save(f"{FRAMES}/kenburns_{os.path.basename(output_path)}_{i:04d}.png")
+
+def generate_real_demo(video_type, progress=gr.Progress()):
+    """Generate a video using real screenshots from the web app or code"""
+    progress(0, desc="Setting up Playwright...")
+    if os.path.exists(FRAMES):
+        shutil.rmtree(FRAMES)
+    os.makedirs(FRAMES, exist_ok=True)
+
+    progress(0.05, desc="Capturing screenshots...")
+    if video_type == "Real App Demo (20s)":
+        screenshots = asyncio.run(capture_screenshots())
+    else:
+        screenshots = asyncio.run(capture_code_screenshots())
+
+    if not screenshots:
+        return stitch_video(OUTPUT_VID, progress)
+
+    progress(0.3, desc="Creating title and transitions...")
+    total_clips = len(screenshots)
+    # Create title frame
+    title_path = f"{FRAMES}/title.png"
+    if video_type == "Real App Demo (20s)":
+        create_title_frame("Pharos NFT Collection Manager", "Web App Demo", title_path)
+    else:
+        create_title_frame("Pharos NFT Collection Manager", "Code Walkthrough", title_path)
+
+    # Create a scene list file for ffmpeg concat
+    all_clips = []
+    # Title clip: 3 seconds static
+    title_clip = f"{FRAMES}/title_clip.mp4"
+    subprocess.run([
+        "ffmpeg", "-y", "-loop", "1", "-i", title_path,
+        "-c:v", "libx264", "-t", "3", "-pix_fmt", "yuv420p",
+        "-vf", f"scale={W}:{H}:force_original_aspect_ratio=decrease,pad={W}:{H}:(ow-iw)/2:(oh-ih)/2",
+        "-r", str(FPS), title_clip
+    ], capture_output=True)
+    all_clips.append(title_clip)
+
+    progress(0.4, desc="Applying Ken Burns effect...")
+    # For each screenshot, create a Ken Burns clip
+    for idx, (img_path, label) in enumerate(screenshots):
+        p = progress(0.4 + (idx / total_clips) * 0.4, desc=f"Processing: {label}")
+        clip_path = f"{FRAMES}/clip_{idx}.mp4"
+        zoom_in = (idx % 2 == 0)  # Alternate zoom direction
+        ken_burns_clip(img_path, clip_path, duration=3.5, zoom_in=zoom_in)
+        # Stitch frames into video
+        subprocess.run([
+            "ffmpeg", "-y", "-framerate", str(FPS),
+            "-pattern_type", "glob", "-i", f"{FRAMES}/kenburns_{os.path.basename(clip_path)}_*.png",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", str(FPS), clip_path
+        ], capture_output=True)
+        all_clips.append(clip_path)
+        # Clean up ken burns frames
+        for f in os.listdir(FRAMES):
+            if f.startswith(f"kenburns_{os.path.basename(clip_path)}"):
+                os.remove(os.path.join(FRAMES, f))
+
+    progress(0.85, desc="Concatenating all clips...")
+    # Create concat file
+    concat_file = f"{FRAMES}/concat.txt"
+    with open(concat_file, "w") as f:
+        for clip in all_clips:
+            f.write(f"file '{clip}'\n")
+
+    subprocess.run([
+        "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", concat_file,
+        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+        "-pix_fmt", "yuv420p", OUTPUT_VID
+    ], capture_output=True)
+
+    shutil.rmtree(FRAMES)
+    os.makedirs(FRAMES, exist_ok=True)
+    progress(1.0, desc="Done!")
+    return OUTPUT_VID
+
 
 # ═══════════════════════════════════════════
 #  VIMEO UPLOAD
@@ -751,9 +960,9 @@ with gr.Blocks(theme=gr.themes.Soft(primary_hue="purple", secondary_hue="cyan"),
             with gr.Row():
                 with gr.Column(scale=1):
                     video_type = gr.Radio(
-                        choices=["Promo Ad (24s)", "Code Deep Dive (10s)", "Web App Tour (10s)"],
-                        value="Promo Ad (24s)", label="Video Type",
-                        info="Promo Ad=7 animated scenes, Code=contract+files, Web App=app mockups"
+                        choices=["Real App Demo (20s)", "Real Code Walkthrough (15s)", "Promo Ad (24s)", "Code Deep Dive (10s)", "Web App Tour (10s)"],
+                        value="Real App Demo (20s)", label="Video Type",
+                        info="Real Demo=actual web app screenshots, Real Code=actual code with syntax highlighting, Promo=animated motion graphics"
                     )
                     gen_btn = gr.Button("✨ Generate Video", variant="primary", size="lg")
                     vid_output = gr.Video(label="Generated Video", show_download_button=True)
