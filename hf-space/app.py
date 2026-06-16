@@ -660,20 +660,20 @@ YT_CREDENTIALS = None
 
 def yt_generate_auth_url(client_id, client_secret):
     try:
-        from google_auth_oauthlib.flow import Flow
-        client_config = {
-            "web": {
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": ["http://localhost:8080/"]
-            }
+        import secrets, hashlib, urllib.parse
+        state = secrets.token_hex(16)
+        redirect_uri = "http://localhost:8080/"
+        params = {
+            "client_id": client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": "https://www.googleapis.com/auth/youtube.upload",
+            "access_type": "offline",
+            "prompt": "consent",
+            "state": state,
         }
-        flow = Flow.from_client_config(client_config, scopes=["https://www.googleapis.com/auth/youtube.upload"])
-        flow.redirect_uri = "http://localhost:8080/"
-        auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline", include_granted_scopes="true")
-        return auth_url, f"✅ Open this URL in your browser. After authorizing, you'll be redirected. COPY the full redirect URL and paste it below."
+        auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
+        return auth_url, f"✅ Open this URL in your browser, authorize, then paste the FULL redirect URL below."
     except Exception as e:
         return f"ERROR: {e}", f"Failed: {e}"
 
@@ -681,28 +681,34 @@ def yt_exchange_code(client_id, client_secret, redirect_url):
     global YT_CREDENTIALS
     try:
         import re
-        from google_auth_oauthlib.flow import Flow
+        from urllib.parse import urlparse
         code_match = re.search(r'[?&]code=([^&]+)', redirect_url)
         if not code_match:
-            return None, "❌ No authorization code found in URL. Make sure to paste the FULL redirect URL (the one with ?code=... in it)"
+            return None, "❌ No authorization code found in URL. Paste the FULL redirect URL (the one with ?code=...)"
         code = code_match.group(1)
-        from urllib.parse import parse_qs, urlparse
         parsed = urlparse(redirect_url)
         actual_redirect = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
-        client_config = {
-            "web": {
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [actual_redirect]
-            }
-        }
-        flow = Flow.from_client_config(client_config, scopes=["https://www.googleapis.com/auth/youtube.upload"])
-        flow.redirect_uri = actual_redirect
-        flow.fetch_token(code=code)
-        YT_CREDENTIALS = flow.credentials
-        return YT_CREDENTIALS, f"✅ Authorized! Token expires at {YT_CREDENTIALS.expiry}. You can now upload videos."
+        resp = requests.post("https://oauth2.googleapis.com/token", data={
+            "code": code,
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "redirect_uri": actual_redirect,
+            "grant_type": "authorization_code",
+        })
+        if resp.status_code != 200:
+            return None, f"❌ Google rejected the code: {resp.status_code} {resp.text[:300]}"
+        token_data = resp.json()
+        from google.oauth2.credentials import Credentials
+        creds = Credentials(
+            token=token_data.get("access_token"),
+            refresh_token=token_data.get("refresh_token"),
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=client_id,
+            client_secret=client_secret,
+            scopes=["https://www.googleapis.com/auth/youtube.upload"],
+        )
+        YT_CREDENTIALS = creds
+        return creds, f"✅ Authorized! You can now upload videos."
     except Exception as e:
         return None, f"❌ Failed: {e}"
 
