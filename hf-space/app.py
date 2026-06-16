@@ -653,6 +653,84 @@ def vimeo_upload(video_path, token, title, desc, progress=gr.Progress()):
     return f"UPLOADED (processing): {vlink}"
 
 # ═══════════════════════════════════════════
+#  YOUTUBE UPLOAD
+# ═══════════════════════════════════════════
+
+YT_CREDENTIALS = None
+
+def yt_generate_auth_url(client_id, client_secret):
+    try:
+        from google_auth_oauthlib.flow import Flow
+        client_config = {
+            "web": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": ["http://localhost:8080/"]
+            }
+        }
+        flow = Flow.from_client_config(client_config, scopes=["https://www.googleapis.com/auth/youtube.upload"])
+        flow.redirect_uri = "http://localhost:8080/"
+        auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline", include_granted_scopes="true")
+        return auth_url, f"✅ Open this URL in your browser. After authorizing, you'll be redirected. COPY the full redirect URL and paste it below."
+    except Exception as e:
+        return f"ERROR: {e}", f"Failed: {e}"
+
+def yt_exchange_code(client_id, client_secret, redirect_url):
+    global YT_CREDENTIALS
+    try:
+        import re
+        from google_auth_oauthlib.flow import Flow
+        code_match = re.search(r'[?&]code=([^&]+)', redirect_url)
+        if not code_match:
+            return None, "❌ No authorization code found in URL. Make sure to paste the FULL redirect URL (the one with ?code=... in it)"
+        code = code_match.group(1)
+        from urllib.parse import parse_qs, urlparse
+        parsed = urlparse(redirect_url)
+        actual_redirect = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+        client_config = {
+            "web": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": [actual_redirect]
+            }
+        }
+        flow = Flow.from_client_config(client_config, scopes=["https://www.googleapis.com/auth/youtube.upload"])
+        flow.redirect_uri = actual_redirect
+        flow.fetch_token(code=code)
+        YT_CREDENTIALS = flow.credentials
+        return YT_CREDENTIALS, f"✅ Authorized! Token expires at {YT_CREDENTIALS.expiry}. You can now upload videos."
+    except Exception as e:
+        return None, f"❌ Failed: {e}"
+
+def yt_upload(video_path, credentials, title, desc, tags_str):
+    global YT_CREDENTIALS
+    if not video_path:
+        return "❌ No video generated yet. Go to Generate Video tab first."
+    creds = credentials or YT_CREDENTIALS
+    if not creds:
+        return "❌ Not authorized. Complete Step 1 and Step 2 first."
+    try:
+        from googleapiclient.discovery import build
+        from googleapiclient.http import MediaFileUpload
+        youtube = build("youtube", "v3", credentials=creds)
+        tags = [t.strip() for t in tags_str.split(",") if t.strip()]
+        body = {
+            "snippet": {"title": title, "description": desc, "tags": tags},
+            "status": {"privacyStatus": "public"},
+        }
+        media = MediaFileUpload(video_path, chunksize=-1, resumable=True)
+        request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
+        response = request.execute()
+        vid_url = f"https://www.youtube.com/watch?v={response['id']}"
+        return f"✅ UPLOADED: {vid_url}"
+    except Exception as e:
+        return f"❌ Upload failed: {e}"
+
+# ═══════════════════════════════════════════
 #  GRADIO UI
 # ═══════════════════════════════════════════
 
@@ -711,6 +789,41 @@ with gr.Blocks(theme=gr.themes.Soft(primary_hue="purple", secondary_hue="cyan"),
                 fn=vimeo_upload,
                 inputs=[vid_output, vimeo_token, vimeo_title, vimeo_desc],
                 outputs=vimeo_result
+            )
+
+        with gr.TabItem("▶️ Upload to YouTube"):
+            yt_client_id = gr.Textbox(label="Google OAuth Client ID", placeholder="From Google Cloud Console (ends with .apps.googleusercontent.com)")
+            yt_client_secret = gr.Textbox(label="Client Secret", type="password", placeholder="From Google Cloud Console")
+            yt_auth_url_box = gr.Textbox(label="Step 1: Click to Authorize", visible=True)
+            yt_auth_btn = gr.Button("🔑 Generate Auth URL", variant="primary")
+            yt_code = gr.Textbox(label="Step 2: Paste Redirect URL here", placeholder="Paste the FULL URL you were redirected to after authorizing")
+            yt_exchange_btn = gr.Button("🔄 Exchange Code", variant="secondary")
+            yt_status = gr.Textbox(label="Auth Status", value="Not authorized", lines=1)
+
+            yt_title = gr.Textbox(label="Video Title", value="Pharos NFT Collection Manager - Code Deep Dive")
+            yt_desc = gr.Textbox(label="Description", lines=4, value="AI Agent Skill for ERC-721 NFT collection management on Pharos Network.\n\nBuilt for the Skill-to-Agent Dual Cascade Hackathon (Phase 1).\n\nGitHub: https://github.com/DaMaker1291/pharos-nft-manager\nWeb App: https://damaker1291.github.io/pharos-nft-manager/")
+            yt_tags = gr.Textbox(label="Tags (comma separated)", value="Pharos, NFT, ERC-721, AI Agent, Blockchain, Web3, Smart Contract, Solidity, Hackathon")
+            yt_upload_btn = gr.Button("☁️ Upload to YouTube", variant="primary")
+            yt_result = gr.Textbox(label="Upload Result", lines=2)
+
+            yt_state = gr.State(None)
+
+            yt_auth_btn.click(
+                fn=yt_generate_auth_url,
+                inputs=[yt_client_id, yt_client_secret],
+                outputs=[yt_auth_url_box, yt_status]
+            )
+
+            yt_exchange_btn.click(
+                fn=yt_exchange_code,
+                inputs=[yt_client_id, yt_client_secret, yt_code],
+                outputs=[yt_state, yt_status]
+            )
+
+            yt_upload_btn.click(
+                fn=yt_upload,
+                inputs=[vid_output, yt_state, yt_title, yt_desc, yt_tags],
+                outputs=yt_result
             )
 
 if __name__ == "__main__":
